@@ -4,6 +4,8 @@ import { ethers } from "ethers";
 function App() {
   const [prompt, setPrompt] = useState("");
   const [connected, setConnected] = useState(false);
+  const [output, setOutput] = useState("");
+  const [url, setURL] = useState("");
 
   let { ethereum } = window;
   let contract = null;
@@ -299,8 +301,28 @@ function App() {
     contract = new ethers.Contract(contractAddress, abi, signer);
   }
 
+  const calculateAIResult = async (modelId, prompt) => {
+    let fee = await contract.estimateFee(modelId);
+    let result = await contract.calculateAIResult(modelId, prompt, {
+      value: fee,
+    });
+    console.log(result);
+  };
+
+  const getllama = async (prompt) => {
+    let result = await contract.getAIResult(11, prompt);
+    console.log(result);
+    setOutput(result);
+  };
+
+  const getStableDiffusion = async (prompt) => {
+    let result = await contract.getAIResult(50, prompt);
+    console.log(`https://ipfs.io/ipfs/${result}`);
+    setURL(`https://ipfs.io/ipfs/${result}`);
+  };
+
   return (
-    <div className="">
+    <div>
       <div className="flex justify-end mr-5 mt-5">
         <button
           className="border bg-blue-400 rounded-md p-2"
@@ -330,31 +352,48 @@ function App() {
         <div className="w-1/2 flex justify-center">
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => {}}
+            onClick={() => {
+              calculateAIResult(11, prompt);
+            }} // llama2
           >
-            Generate Llama2 output 
+            Generate Llama2 output
           </button>
           <button
             className="ml-5 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => {}}
+            onClick={() => {
+              getllama(prompt);
+            }}
           >
             Get Llama2 output
           </button>
         </div>
         <div className="w-1/2 flex justify-center">
-        <button
+          <button
             className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => {}}
+            onClick={() => {
+              calculateAIResult(50, prompt);
+            }}
           >
             Generate Stable Diffusion Art
           </button>
           <button
             className="ml-5 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => {}}
+            onClick={() => {
+              getStableDiffusion(prompt);
+            }}
           >
             Get Stable Diffusion Art
           </button>
         </div>
+      </div>
+      <div className="flex justify-center items-center">
+        <div className="w-1/2">
+        {output && <span className="">{output}</span>}
+        </div>
+        <div className="w-1/2 mt-10 ml-5 pl-7">
+        {url && <img  src={url} alt="" />}
+        </div>
+
       </div>
     </div>
   );
